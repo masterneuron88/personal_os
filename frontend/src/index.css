@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 225 25% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 225 25% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 25% 10%;
+
+    --primary: 220 70% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 93%;
+    --secondary-foreground: 225 25% 15%;
+
+    --muted: 220 15% 93%;
+    --muted-foreground: 220 10% 45%;
+
+    --accent: 220 15% 95%;
+    --accent-foreground: 225 25% 10%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 220 70% 50%;
+
+    --radius: 0.75rem;
+
+    /* Domain colors */
+    --domain-work: 220 75% 50%;
+    --domain-health: 152 60% 40%;
+    --domain-family: 32 85% 50%;
+    --domain-wealth: 45 80% 45%;
+    --domain-me: 270 55% 55%;
+
+    /* Glass effect */
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 220 15% 88% / 0.8;
+
+    /* Sidebar */
+    --sidebar-background: 220 20% 97%;
+    --sidebar-foreground: 220 10% 30%;
+    --sidebar-primary: 220 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 95%;
+    --sidebar-accent-foreground: 225 25% 10%;
+    --sidebar-border: 220 15% 88%;
+    --sidebar-ring: 220 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-border/60 rounded-xl shadow-sm;
+  }
+
+  .domain-glow-work {
+    box-shadow: 0 0 20px -5px hsl(var(--domain-work) / 0.2);
+  }
+  .domain-glow-health {
+    box-shadow: 0 0 20px -5px hsl(var(--domain-health) / 0.2);
+  }
+  .domain-glow-family {
+    box-shadow: 0 0 20px -5px hsl(var(--domain-family) / 0.2);
+  }
+  .domain-glow-wealth {
+    box-shadow: 0 0 20px -5px hsl(var(--domain-wealth) / 0.2);
+  }
+  .domain-glow-me {
+    box-shadow: 0 0 20px -5px hsl(var(--domain-me) / 0.2);
+  }
+}
