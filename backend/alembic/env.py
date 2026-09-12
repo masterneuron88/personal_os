@@ -4,6 +4,7 @@ from alembic import context
 
 from app.database import Base
 from app.config import DATABASE_URL
+import app.models
 
 config = context.config
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
