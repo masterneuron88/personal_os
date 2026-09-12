@@ -50,3 +50,30 @@ class RoutineItem(Base):
     recurrence_rule = Column(Enum(RecurrenceRule), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class PlanningHorizon(str, enum.Enum):
+    today = "today"
+    month = "month"
+    year = "year"
+    custom = "custom"
+
+
+class PlanningStatus(str, enum.Enum):
+    open = "open"
+    promoted = "promoted"
+    archived = "archived"
+
+
+class PlanningItem(Base):
+    __tablename__ = "planning_items"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    title = Column(String, nullable=False)
+    horizon = Column(Enum(PlanningHorizon), nullable=False)
+    target_date = Column(Date, nullable=True)
+    notes = Column(String, nullable=True)
+    status = Column(Enum(PlanningStatus), nullable=False, default=PlanningStatus.open)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
