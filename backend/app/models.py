@@ -77,3 +77,6 @@ class PlanningItem(Base):
     status = Column(Enum(PlanningStatus), nullable=False, default=PlanningStatus.open)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+RoutineItem.template_id = Column(UUID(as_uuid=True), ForeignKey("routine_items.id"), nullable=True)

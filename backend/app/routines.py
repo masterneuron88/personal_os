@@ -1,5 +1,5 @@
 import uuid
-from datetime import date as date_type, time as time_type
+from datetime import date as date_type, time as time_type, datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -10,6 +10,39 @@ from app.models import RoutineItem, Domain, RoutineStatus, RecurrenceRule, User
 from app.auth import get_current_user
 
 router = APIRouter(prefix="/routines", tags=["routines"])
+
+def ensure_todays_recurring_instances(db: Session, user_id, target_date):
+    templates = (
+        db.query(RoutineItem)
+        .filter(
+            RoutineItem.user_id == user_id,
+            RoutineItem.is_recurring == True,
+            RoutineItem.template_id.is_(None),
+        )
+        .all()
+    )
+    for template in templates:
+        if template.recurrence_rule == RecurrenceRule.weekly:
+            if template.scheduled_date.weekday() != target_date.weekday():
+                continue
+        exists = (
+            db.query(RoutineItem)
+            .filter(RoutineItem.template_id == template.id, RoutineItem.scheduled_date == target_date)
+            .first()
+        )
+        if exists:
+            continue
+        instance = RoutineItem(
+            user_id=user_id,
+            title=template.title,
+            domain=template.domain,
+            scheduled_date=target_date,
+            scheduled_time=template.scheduled_time,
+            template_id=template.id,
+        )
+        db.add(instance)
+    db.commit()
+
 
 
 class RoutineItemCreate(BaseModel):
@@ -50,6 +83,7 @@ def list_routines(
 ):
     if target_date is None:
         target_date = date_type.today()
+    ensure_todays_recurring_instances(db, current_user.id, target_date)
     items = (
         db.query(RoutineItem)
         .filter(RoutineItem.user_id == current_user.id, RoutineItem.scheduled_date == target_date)
@@ -100,3 +134,34 @@ def delete_routine(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Routine item not found")
     db.delete(item)
     db.commit()
+
+
+@router.get("/focus")
+def focus_view(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    today = date_type.today()
+    ensure_todays_recurring_instances(db, current_user.id, today)
+    items = db.query(RoutineItem).filter(
+        RoutineItem.user_id == current_user.id, RoutineItem.scheduled_date == today
+    ).all()
+
+    now = datetime.now().time()
+    timed = sorted([i for i in items if i.scheduled_time], key=lambda i: i.scheduled_time)
+    current = None
+    up_next = None
+    for i in timed:
+        if i.scheduled_time <= now:
+            current = i
+        elif i.scheduled_time > now and up_next is None:
+            up_next = i
+    in_progress = [i for i in items if not i.scheduled_time and i.status == RoutineStatus.pending]
+
+    def shape(i):
+        return None if i is None else {"id": str(i.id), "title": i.title, "domain": i.domain, "scheduled_time": str(i.scheduled_time) if i.scheduled_time else None}
+
+    return {
+        "current_activity": shape(current),
+        "up_next": shape(up_next),
+        "in_progress": [shape(i) for i in in_progress],
+    }
+
+
