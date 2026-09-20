@@ -13,7 +13,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 import enum
-from sqlalchemy import Enum, Date, Time, Boolean, ForeignKey
+from sqlalchemy import Enum, Date, Time, Boolean, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
 
@@ -28,6 +28,8 @@ class Domain(str, enum.Enum):
 class RoutineStatus(str, enum.Enum):
     pending = "pending"
     done = "done"
+    in_progress = "in_progress"
+    postponed = "postponed"
 
 
 class RecurrenceRule(str, enum.Enum):
@@ -48,6 +50,8 @@ class RoutineItem(Base):
     status = Column(Enum(RoutineStatus), nullable=False, default=RoutineStatus.pending)
     is_recurring = Column(Boolean, nullable=False, default=False)
     recurrence_rule = Column(Enum(RecurrenceRule), nullable=True)
+    comments = Column(String, nullable=True)
+    alarm_lead_minutes = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -75,6 +79,8 @@ class PlanningItem(Base):
     target_date = Column(Date, nullable=True)
     notes = Column(String, nullable=True)
     status = Column(Enum(PlanningStatus), nullable=False, default=PlanningStatus.open)
+    comments = Column(String, nullable=True)
+    alarm_lead_minutes = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
