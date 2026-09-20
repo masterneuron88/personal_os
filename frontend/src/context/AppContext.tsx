@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { AppState, RoutineTask, LearningItem, PlanningItem, AnalysisItem, DomainScore, Domain, TargetRole } from "@/types";
+import { getToken, getRoutines, createRoutine, updateRoutine, deleteRoutine } from "@/lib/api";
 
 const DEFAULT_SCORES: DomainScore[] = [
   { domain: "work", score: 72, trend: "improving" },
@@ -11,14 +12,7 @@ const DEFAULT_SCORES: DomainScore[] = [
 
 const DEFAULT_STATE: AppState = {
   scores: DEFAULT_SCORES,
-  tasks: [
-    { id: "1", title: "Morning meditation", status: "pending", priority: "high", tags: ["me", "health"], time: "06:30", date: new Date().toISOString().slice(0, 10), recurrence: "daily" },
-    { id: "2", title: "Review quarterly goals", status: "pending", priority: "high", tags: ["work"], time: "09:00", date: new Date().toISOString().slice(0, 10) },
-    { id: "3", title: "30 min workout", status: "pending", priority: "medium", tags: ["health"], time: "07:00", date: new Date().toISOString().slice(0, 10), recurrence: "daily" },
-    { id: "4", title: "Family dinner", status: "pending", priority: "high", tags: ["family"], time: "19:00", date: new Date().toISOString().slice(0, 10) },
-    { id: "5", title: "Review investment portfolio", status: "pending", priority: "medium", tags: ["wealth"], date: new Date().toISOString().slice(0, 10) },
-    { id: "6", title: "Read 30 pages", status: "pending", priority: "low", tags: ["me"], time: "21:00", date: new Date().toISOString().slice(0, 10), recurrence: "daily" },
-  ],
+  tasks: [],
   learnings: [
     { id: "1", title: "TypeScript Advanced Patterns", description: "Deep dive into conditional types and mapped types", tags: ["work", "me"], status: "in-progress" },
     { id: "2", title: "Nutrition fundamentals", description: "Macro tracking and meal planning basics", tags: ["health"], status: "planned" },
@@ -57,12 +51,35 @@ function loadState(): AppState {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Ensure careerGoals exists for older stored states
       if (!parsed.careerGoals) parsed.careerGoals = DEFAULT_STATE.careerGoals;
       return parsed;
     }
   } catch {}
   return DEFAULT_STATE;
+}
+
+function backendToTask(item: any): RoutineTask {
+  return {
+    id: item.id,
+    title: item.title,
+    status: item.status,
+    priority: "medium",
+    tags: [item.domain],
+    time: item.scheduled_time ? item.scheduled_time.slice(0, 5) : undefined,
+    date: item.scheduled_date,
+    recurrence: item.is_recurring ? (item.recurrence_rule === "weekly" ? "weekly" : "daily") : undefined,
+  };
+}
+
+function taskToBackendCreate(task: Omit<RoutineTask, "id">) {
+  return {
+    title: task.title,
+    domain: task.tags[0] || "work",
+    scheduled_date: task.date,
+    scheduled_time: task.time ? `${task.time}:00` : undefined,
+    is_recurring: !!task.recurrence,
+    recurrence_rule: task.recurrence || undefined,
+  };
 }
 
 interface AppContextType {
@@ -95,93 +112,109 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
+  useEffect(() => {
+    if (!getToken()) return;
+    getRoutines()
+      .then((items: any[]) => {
+        setState((s) => ({ ...s, tasks: items.map(backendToTask) }));
+      })
+      .catch(() => {});
+  }, []);
+
   const genId = () => crypto.randomUUID();
 
   const addTask = useCallback((task: Omit<RoutineTask, "id">) => {
-    setState(s => ({ ...s, tasks: [...s.tasks, { ...task, id: genId() }] }));
+    createRoutine(taskToBackendCreate(task))
+      .then((created: any) => {
+        setState((s) => ({ ...s, tasks: [...s.tasks, backendToTask(created)] }));
+      })
+      .catch(() => {
+        setState((s) => ({ ...s, tasks: [...s.tasks, { ...task, id: genId() }] }));
+      });
   }, []);
 
   const updateTask = useCallback((id: string, updates: Partial<RoutineTask>) => {
-    setState(s => ({ ...s, tasks: s.tasks.map(t => t.id === id ? { ...t, ...updates } : t) }));
+    const backendUpdates: any = {};
+    if (updates.status) backendUpdates.status = updates.status;
+    if (updates.title) backendUpdates.title = updates.title;
+    if (updates.tags && updates.tags[0]) backendUpdates.domain = updates.tags[0];
+    if (updates.time) backendUpdates.scheduled_time = `${updates.time}:00`;
+    updateRoutine(id, backendUpdates).catch(() => {});
+    setState((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)) }));
   }, []);
 
   const deleteTask = useCallback((id: string) => {
-    setState(s => ({ ...s, tasks: s.tasks.filter(t => t.id !== id) }));
+    deleteRoutine(id).catch(() => {});
+    setState((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) }));
   }, []);
 
   const addLearning = useCallback((item: Omit<LearningItem, "id">) => {
-    setState(s => ({ ...s, learnings: [...s.learnings, { ...item, id: genId() }] }));
+    setState((s) => ({ ...s, learnings: [...s.learnings, { ...item, id: genId() }] }));
   }, []);
-
   const updateLearning = useCallback((id: string, updates: Partial<LearningItem>) => {
-    setState(s => ({ ...s, learnings: s.learnings.map(l => l.id === id ? { ...l, ...updates } : l) }));
+    setState((s) => ({ ...s, learnings: s.learnings.map((l) => (l.id === id ? { ...l, ...updates } : l)) }));
   }, []);
-
   const deleteLearning = useCallback((id: string) => {
-    setState(s => ({ ...s, learnings: s.learnings.filter(l => l.id !== id) }));
+    setState((s) => ({ ...s, learnings: s.learnings.filter((l) => l.id !== id) }));
   }, []);
 
   const addPlan = useCallback((item: Omit<PlanningItem, "id">) => {
-    setState(s => ({ ...s, plans: [...s.plans, { ...item, id: genId() }] }));
+    setState((s) => ({ ...s, plans: [...s.plans, { ...item, id: genId() }] }));
   }, []);
-
   const updatePlan = useCallback((id: string, updates: Partial<PlanningItem>) => {
-    setState(s => ({ ...s, plans: s.plans.map(p => p.id === id ? { ...p, ...updates } : p) }));
+    setState((s) => ({ ...s, plans: s.plans.map((p) => (p.id === id ? { ...p, ...updates } : p)) }));
   }, []);
-
   const deletePlan = useCallback((id: string) => {
-    setState(s => ({ ...s, plans: s.plans.filter(p => p.id !== id) }));
+    setState((s) => ({ ...s, plans: s.plans.filter((p) => p.id !== id) }));
   }, []);
 
   const addAnalysis = useCallback((item: Omit<AnalysisItem, "id">) => {
-    setState(s => ({ ...s, analyses: [...s.analyses, { ...item, id: genId() }] }));
+    setState((s) => ({ ...s, analyses: [...s.analyses, { ...item, id: genId() }] }));
   }, []);
-
   const updateAnalysis = useCallback((id: string, updates: Partial<AnalysisItem>) => {
-    setState(s => ({ ...s, analyses: s.analyses.map(a => a.id === id ? { ...a, ...updates } : a) }));
+    setState((s) => ({ ...s, analyses: s.analyses.map((a) => (a.id === id ? { ...a, ...updates } : a)) }));
   }, []);
-
   const deleteAnalysis = useCallback((id: string) => {
-    setState(s => ({ ...s, analyses: s.analyses.filter(a => a.id !== id) }));
+    setState((s) => ({ ...s, analyses: s.analyses.filter((a) => a.id !== id) }));
   }, []);
 
   const updateScore = useCallback((domain: Domain, score: number) => {
-    setState(s => ({
-      ...s,
-      scores: s.scores.map(sc => sc.domain === domain ? { ...sc, score } : sc),
-    }));
+    setState((s) => ({ ...s, scores: s.scores.map((sc) => (sc.domain === domain ? { ...sc, score } : sc)) }));
   }, []);
 
-  const getFilteredState = useCallback((domain: Domain): AppState => ({
-    scores: state.scores.filter(s => s.domain === domain),
-    tasks: state.tasks.filter(t => t.tags.includes(domain)),
-    learnings: state.learnings.filter(l => l.tags.includes(domain)),
-    plans: state.plans.filter(p => p.tags.includes(domain)),
-    analyses: state.analyses.filter(a => a.tags.includes(domain)),
-    careerGoals: state.careerGoals,
-  }), [state]);
+  const getFilteredState = useCallback(
+    (domain: Domain): AppState => ({
+      scores: state.scores.filter((s) => s.domain === domain),
+      tasks: state.tasks.filter((t) => t.tags.includes(domain)),
+      learnings: state.learnings.filter((l) => l.tags.includes(domain)),
+      plans: state.plans.filter((p) => p.tags.includes(domain)),
+      analyses: state.analyses.filter((a) => a.tags.includes(domain)),
+      careerGoals: state.careerGoals,
+    }),
+    [state]
+  );
 
   const addCareerGoal = useCallback((goal: Omit<TargetRole, "id">) => {
-    setState(s => ({ ...s, careerGoals: [...s.careerGoals, { ...goal, id: genId() }] }));
+    setState((s) => ({ ...s, careerGoals: [...s.careerGoals, { ...goal, id: genId() }] }));
   }, []);
-
   const updateCareerGoal = useCallback((id: string, updates: Partial<TargetRole>) => {
-    setState(s => ({ ...s, careerGoals: s.careerGoals.map(g => g.id === id ? { ...g, ...updates } : g) }));
+    setState((s) => ({ ...s, careerGoals: s.careerGoals.map((g) => (g.id === id ? { ...g, ...updates } : g)) }));
   }, []);
-
   const deleteCareerGoal = useCallback((id: string) => {
-    setState(s => ({ ...s, careerGoals: s.careerGoals.filter(g => g.id !== id) }));
+    setState((s) => ({ ...s, careerGoals: s.careerGoals.filter((g) => g.id !== id) }));
   }, []);
 
   return (
-    <AppContext.Provider value={{
-      state, addTask, updateTask, deleteTask,
-      addLearning, updateLearning, deleteLearning,
-      addPlan, updatePlan, deletePlan,
-      addAnalysis, updateAnalysis, deleteAnalysis,
-      updateScore, getFilteredState,
-      addCareerGoal, updateCareerGoal, deleteCareerGoal,
-    }}>
+    <AppContext.Provider
+      value={{
+        state, addTask, updateTask, deleteTask,
+        addLearning, updateLearning, deleteLearning,
+        addPlan, updatePlan, deletePlan,
+        addAnalysis, updateAnalysis, deleteAnalysis,
+        updateScore, getFilteredState,
+        addCareerGoal, updateCareerGoal, deleteCareerGoal,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
