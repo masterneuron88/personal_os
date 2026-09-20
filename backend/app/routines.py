@@ -59,6 +59,8 @@ class RoutineItemUpdate(BaseModel):
     domain: Optional[Domain] = None
     scheduled_time: Optional[time_type] = None
     status: Optional[RoutineStatus] = None
+    comments: Optional[str] = None
+    alarm_lead_minutes: Optional[int] = None
 
 
 class RoutineItemOut(BaseModel):
@@ -70,6 +72,8 @@ class RoutineItemOut(BaseModel):
     status: RoutineStatus
     is_recurring: bool
     recurrence_rule: Optional[RecurrenceRule]
+    comments: Optional[str] = None
+    alarm_lead_minutes: Optional[int] = None
 
     class Config:
         from_attributes = True

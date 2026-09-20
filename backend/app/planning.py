@@ -23,6 +23,8 @@ class PlanningItemUpdate(BaseModel):
     title: Optional[str] = None
     status: Optional[PlanningStatus] = None
     notes: Optional[str] = None
+    comments: Optional[str] = None
+    alarm_lead_minutes: Optional[int] = None
 
 
 class PlanningItemOut(BaseModel):
@@ -32,6 +34,8 @@ class PlanningItemOut(BaseModel):
     target_date: Optional[date_type]
     notes: Optional[str]
     status: PlanningStatus
+    comments: Optional[str] = None
+    alarm_lead_minutes: Optional[int] = None
 
     class Config:
         from_attributes = True
