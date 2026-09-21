@@ -2,7 +2,7 @@
 
 > **Purpose of this file:** This is the single source of truth for the actual current state of the codebase — schema, endpoints, architecture decisions. It is NOT a plan or a spec (see `00-product-brainstorm.md`, `requirements.md`, `design.md`, `tasks.md` for those) — it describes what's really built, right now.
 >
-> **Update discipline:** Any change to `models.py`, routers, or architecture should be followed by an update to this file, in the same work session. Treat it like a commit message that never gets truncated — the "recent changes" log at the bottom keeps a short rolling history; git itself holds the full history.
+> **Update discipline:** Before planning or making ANY code change (schema, routers, architecture), read this file first — it is the authoritative current state. After any such change, update this file in the same work session, before committing. A git pre-commit hook (`.git/hooks/pre-commit`) enforces the "after" half by warning if `models.py`, any file under `app/`, or `alembic/versions/` changed without a matching change to this file in the same commit. This applies to any AI assistant or contributor working on this repo, not just one tool or one session.
 >
 > **Last updated:** 2026-09-20
 
