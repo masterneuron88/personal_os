@@ -4,7 +4,9 @@
 >
 > **Update discipline:** Before planning or making ANY code change (schema, routers, architecture), read this file first — it is the authoritative current state. After any such change, update this file in the same work session, before committing. A git pre-commit hook (`.git/hooks/pre-commit`) enforces the "after" half by warning if `models.py`, any file under `app/`, or `alembic/versions/` changed without a matching change to this file in the same commit. This applies to any AI assistant or contributor working on this repo, not just one tool or one session.
 >
-> **Last updated:** 2026-09-20
+> **Last updated:** 2026-09-21
+
+> **See also:** `BACKLOG.md` (same repo root) for known tech debt, deferred gaps, and future ideas — not this file's job to track those.
 
 ---
 
