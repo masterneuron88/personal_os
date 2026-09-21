@@ -132,7 +132,7 @@ Auth dependency `get_current_user` (used across routers) validates the Bearer to
 |---|---|---|
 | GET | `/routines?target_date=YYYY-MM-DD` | List routine items for a date (defaults to today). Auto-generates today's recurring instances from templates before returning (`ensure_todays_recurring_instances`). |
 | POST | `/routines` | Create a routine item. Body: `RoutineItemCreate` (title, domain, scheduled_date, scheduled_time?, is_recurring?, recurrence_rule?) |
-| PATCH | `/routines/{item_id}` | Partial update. Body: `RoutineItemUpdate` (title?, domain?, scheduled_time?, status?) — **note: as of this writing, `RoutineItemUpdate` does NOT yet include `comments` or `alarm_lead_minutes` as updatable fields — these exist on the model/DB but the Pydantic schema hasn't been extended yet. This is a pending follow-up before the Android app can use them.** |
+| PATCH | `/routines/{item_id}` | Partial update. Body: `RoutineItemUpdate` (title?, domain?, scheduled_time?, status?, comments?, alarm_lead_minutes?) |
 | DELETE | `/routines/{item_id}` | Delete a routine item |
 | GET | `/routines/focus` | "Focus Mode" view — returns `current_activity`, `up_next`, and `in_progress` items for today, based on current time vs `scheduled_time` |
 
@@ -141,7 +141,7 @@ Auth dependency `get_current_user` (used across routers) validates the Bearer to
 |---|---|---|
 | GET | `/planning` | List all planning items for the current user |
 | POST | `/planning` | Create. Body: `PlanningItemCreate` (title, horizon, target_date?, notes?) |
-| PATCH | `/planning/{item_id}` | Partial update. Body: `PlanningItemUpdate` (title?, status?, notes?) — **same note as above: `comments`/`alarm_lead_minutes` not yet in the Pydantic schema** |
+| PATCH | `/planning/{item_id}` | Partial update. Body: `PlanningItemUpdate` (title?, status?, notes?, comments?, alarm_lead_minutes?) |
 | DELETE | `/planning/{item_id}` | Delete |
 
 ### `/life_score` (life_score.py)
@@ -171,8 +171,7 @@ Router registered in `main.py`; contents not reviewed in this documentation pass
 Full plan lives in a separate execution doc (`personalos-android-execution-plan.md`), but the schema/API-relevant facts are summarized here since they'll land in this same backend:
 
 - **Auth for Android:** static API key (not JWT), checked via a header (e.g. `X-API-Key`) — separate from the web app's JWT flow. Not yet implemented.
-- **Pending backend work before Android can consume `/routines` and `/planning` fully:**
-  - Extend `RoutineItemUpdate` and `PlanningItemUpdate` Pydantic schemas to accept `comments` and `alarm_lead_minutes` (columns already exist in DB/models, just not exposed via PATCH yet)
+
 - **New table planned:** `capture_entries` — for the voice/text capture feature. Columns: `id`, `raw_text` (nullable), `raw_audio_url` (nullable), `source` (enum: voice/text), `status` (enum: pending_sync/transcribed/synced), `created_at`, `processed` (bool), `category` (nullable, filled later by analysis phase), `insights` (nullable, filled later).
 - **New endpoint planned:** `POST /capture` — accepts raw text or raw audio upload.
 - **Hosting:** Oracle Cloud Always Free tier VM, Postgres + FastAPI moved there, HTTPS via Caddy or similar. Web app's API base URL will need to point to the new hosted URL once this happens (currently `127.0.0.1:8000`).
@@ -184,4 +183,5 @@ Full plan lives in a separate execution doc (`personalos-android-execution-plan.
 *(Keep this short — last ~10 entries. Full history lives in git log.)*
 
 - **2026-09-20** — Migration `7a76f337b554`: added `comments`, `alarm_lead_minutes` to `routine_items` and `planning_items`; extended `RoutineStatus` enum with `in_progress`, `postponed`. Applied and verified (server restarts cleanly). Pydantic schemas (`RoutineItemUpdate`, `PlanningItemUpdate`) NOT yet updated to expose these new fields — follow-up needed.
+- **2026-09-20** — Closed schema gap: `RoutineItemUpdate`/`PlanningItemUpdate` and `RoutineItemOut`/`PlanningItemOut` now all expose `comments` and `alarm_lead_minutes`. Verified end-to-end with curl PATCH + `psql` check (write and read both confirmed). Commit `c5926e3`.
 - **(earlier, session 1)** — Initial backend build: `users`, `routine_items`, `planning_items` tables; JWT auth; CRUD for routines/planning; Focus Mode endpoint; CORS; frontend wired to real backend for tasks (learnings/plans/career goals still on localStorage as of last check).
