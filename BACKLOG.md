@@ -25,6 +25,27 @@ The `.git/hooks/pre-commit` script that warns when backend code changes without 
 Learnings, plans, and career goals in the web app are still stored in `localStorage`, not the backend — unlike tasks/routines/planning, which are fully migrated. This is a known, deliberate partial migration, not a bug.
 **Status:** Open — planned as a "further out" item in the original roadmap.
 
+### 4. Hosting decision: Azure B1s VM, starting small — monitor and upgrade if needed
+**Added:** 2026-09-21
+Chose Azure B1s VM (~$7.59/mo, 1 vCPU, 1 GB RAM) over Oracle Cloud free tier and over Azure App Service, to host FastAPI + Postgres together (same architecture as originally planned for Oracle, just on Azure). Kept Postgres — did NOT switch to SQLite, since that would have required reworking models.py (UUID/Enum types) and redoing all 5 existing Alembic migrations for no real benefit given single-user scale.
+**Known risks accepted for now:**
+- 1 GB RAM is tight for Postgres + FastAPI running simultaneously — risk of swapping under concurrent load (e.g. multiple devices syncing at once), which is the most likely cause of a "slow app" experience.
+- B1s is a burstable VM (CPU credits), not dedicated — fine for light CRUD traffic, but would throttle under any sustained load (e.g. future server-side audio transcription).
+- No managed backups — a nightly `pg_dump` (or equivalent) needs to be set up manually; nothing protects the data by default if the VM has an issue.
+- No managed auto-restart — `systemd` needs to be configured so FastAPI/Postgres restart automatically on crash or reboot.
+**Plan:** Start on B1s, watch for sluggishness or memory pressure in the first couple weeks of real use, and resize to B1ms ($15.60/mo, 2 GB RAM) if needed — this is a simple resize + reboot on Azure, no rebuild required.
+**Status:** Decided, not yet executed.
+
+### 5. Set up automated Postgres backups (must-do, not optional)
+**Added:** 2026-09-21
+Since we're self-hosting Postgres on a single VM with no managed database service, there is no safety net for data loss. Need a scheduled backup routine (e.g. nightly `pg_dump` to a separate storage location) before this VM becomes the real, only copy of the data.
+**Status:** Open — should be done as part of initial VM setup, not deferred.
+
+### 6. Set up systemd auto-restart for backend + Postgres
+**Added:** 2026-09-21
+On the Azure VM, FastAPI needs to run as a `systemd` service (not manual `uvicorn --reload`) so it restarts automatically on crash or VM reboot. Postgres also needs to be confirmed to start automatically on boot.
+**Status:** Open — part of initial VM setup.
+
 ---
 
 ## Ideas (not yet committed to doing)
