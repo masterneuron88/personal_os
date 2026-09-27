@@ -25,26 +25,57 @@ The `.git/hooks/pre-commit` script that warns when backend code changes without 
 Learnings, plans, and career goals in the web app are still stored in `localStorage`, not the backend — unlike tasks/routines/planning, which are fully migrated. This is a known, deliberate partial migration, not a bug.
 **Status:** Open — planned as a "further out" item in the original roadmap.
 
-### 4. Hosting decision: Azure B1s VM, starting small — monitor and upgrade if needed
-**Added:** 2026-09-21
-Chose Azure B1s VM (~$7.59/mo, 1 vCPU, 1 GB RAM) over Oracle Cloud free tier and over Azure App Service, to host FastAPI + Postgres together (same architecture as originally planned for Oracle, just on Azure). Kept Postgres — did NOT switch to SQLite, since that would have required reworking models.py (UUID/Enum types) and redoing all 5 existing Alembic migrations for no real benefit given single-user scale.
-**Known risks accepted for now:**
-- 1 GB RAM is tight for Postgres + FastAPI running simultaneously — risk of swapping under concurrent load (e.g. multiple devices syncing at once), which is the most likely cause of a "slow app" experience.
-- B1s is a burstable VM (CPU credits), not dedicated — fine for light CRUD traffic, but would throttle under any sustained load (e.g. future server-side audio transcription).
-- No managed backups — a nightly `pg_dump` (or equivalent) needs to be set up manually; nothing protects the data by default if the VM has an issue.
-- No managed auto-restart — `systemd` needs to be configured so FastAPI/Postgres restart automatically on crash or reboot.
-**Plan:** Start on B1s, watch for sluggishness or memory pressure in the first couple weeks of real use, and resize to B1ms ($15.60/mo, 2 GB RAM) if needed — this is a simple resize + reboot on Azure, no rebuild required.
-**Status:** Decided, not yet executed.
+
 
 ### 5. Set up automated Postgres backups (must-do, not optional)
 **Added:** 2026-09-21
 Since we're self-hosting Postgres on a single VM with no managed database service, there is no safety net for data loss. Need a scheduled backup routine (e.g. nightly `pg_dump` to a separate storage location) before this VM becomes the real, only copy of the data.
 **Status:** Open — should be done as part of initial VM setup, not deferred.
 
-### 6. Set up systemd auto-restart for backend + Postgres
-**Added:** 2026-09-21
-On the Azure VM, FastAPI needs to run as a `systemd` service (not manual `uvicorn --reload`) so it restarts automatically on crash or VM reboot. Postgres also needs to be confirmed to start automatically on boot.
-**Status:** Open — part of initial VM setup.
+
+
+### 7. Rotate DATABASE_URL password (exposed in plaintext during Azure setup chat)
+**Added:** 2026-09-24
+The Postgres password for `personal_os_app` was pasted in plaintext into a Claude chat while sharing `DATABASE_URL` for Azure VM setup. Low real risk for a single-user personal project, but good hygiene to rotate.
+**To do:**
+- Pick a new password
+- Update it in Postgres (`ALTER USER personal_os_app WITH PASSWORD 'newpassword';`) — both locally and on the Azure VM once created there
+- Update `.env` in both places (local machine and Azure VM) to match
+- Restart FastAPI (local and VM) after updating `.env` so it picks up the new value
+
+
+### 8. Swap open port 8000 for HTTPS via Caddy before going beyond testing
+**Added:** 2026-09-24
+Azure NSG rule `Allow-Port-8000-Temp` currently exposes FastAPI on plain HTTP (port 8000) to the entire internet, for Android development/testing convenience. Before this goes further than testing:
+- Set up Caddy on the VM for automatic HTTPS (likely needs a free subdomain via DuckDNS or similar, since Caddy's auto-HTTPS needs a real domain name, not a bare IP)
+- Point FastAPI behind Caddy on port 443
+- Remove/disable the `Allow-Port-8000-Temp` NSG rule once HTTPS is confirmed working
+- Update Android app's base URL from `http://4.224.33.25:8000` to the HTTPS domain
+
+### 9. Rotate DATABASE_URL password (exposed a second time, now on the Azure VM too)
+**Added:** 2026-09-24
+Same password rotation item as before (#5) — the plaintext password was also used to set up the VM's Postgres user (`personal_os_app`) during Azure setup. When rotating:
+- Update the password in Postgres **on both** the local machine and the Azure VM
+- Update `.env` in both places to match
+- Restart FastAPI in both places (locally: manual restart; on VM: `sudo systemctl restart personalos-backend`)
+
+### 10. Create a DECISIONS.md (or HISTORY.md) for resolved-item context
+**Added:** 2026-09-26
+Now that BACKLOG.md only tracks pending items (not resolved history), we may lose useful "why did we decide X" context over time. A separate, append-only file — one-line entries, never edited — would preserve decisions (e.g. Azure vs Oracle, systemd setup) without bloating the backlog.
+**Status:** Deferred — nice-to-have, not urgent.
+
+### 11. Update PROJECT_CONTEXT.md — replace stale Oracle Cloud references with Azure
+**Added:** 2026-09-26
+Section 5 and Section 6 of PROJECT_CONTEXT.md still describe Oracle Cloud as the hosting plan. Actual hosting is the Azure VM (`personalos-vm`, `4.224.33.25`), deployed and confirmed working. Needs a find-and-replace pass.
+**Status:** Open.
+
+### 12. Create Android-specific docs (PROJECT_CONTEXT, BACKLOG, update main ROADMAP)
+**Added:** 2026-09-26
+As the Android app project grows, it needs the same documentation discipline as the backend. Need:
+- `personalos-android-project-context.md` — live state of the Android codebase (structure, build config, Kotlin/Compose patterns)
+- `personalos-android-backlog.md` — Android-specific tech debt and pending features
+- `ROADMAP.md` (at repo root) — unified feature roadmap across web + Android, with phases and priorities
+**Status:** Open — start documenting during next Android session, as the project structure stabilizes.
 
 ---
 

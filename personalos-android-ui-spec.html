@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PersonalOS Android — UI spec</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#faf9f7; --card:#ffffff; --sunk:#f1efe8;
+  --ink:#1f1f1d; --ink2:#5f5e5a; --ink3:#8a8982;
+  --line:#e2e0d8; --line2:#c9c7bd;
+  --accent:#185fa5; --accent-bg:#e6f1fb;
+  --ok:#0f6e56; --warn:#854f0b;
+  --health-bg:#e1f5ee; --health-fg:#0f6e56;
+  --work-bg:#e6f1fb;  --work-fg:#0c447c;
+  --family-bg:#fbeaf0; --family-fg:#72243e;
+  --wealth-bg:#faeeda; --wealth-fg:#633806;
+  --me-bg:#eeedfe;     --me-fg:#3c3489;
+  --radius:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1a18; --card:#242421; --sunk:#2c2c2a;
+    --ink:#f2f1ec; --ink2:#b4b2a9; --ink3:#888780;
+    --line:#3a3a36; --line2:#4d4d48;
+    --accent:#85b7eb; --accent-bg:#0c447c;
+    --ok:#5dcaa5; --warn:#efa027;
+    --health-bg:#085041; --health-fg:#9fe1cb;
+    --work-bg:#0c447c;   --work-fg:#b5d4f4;
+    --family-bg:#72243e; --family-fg:#f4c0d1;
+    --wealth-bg:#633806; --wealth-fg:#fac775;
+    --me-bg:#3c3489;     --me-fg:#cecbf6;
+  }
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px;line-height:1.7;-webkit-text-size-adjust:100%}
+.wrap{max-width:960px;margin:0 auto;padding:2rem 1.25rem 4rem}
+h1{font-size:26px;font-weight:500;margin:0 0 .25rem}
+h2{font-size:19px;font-weight:500;margin:2.5rem 0 .75rem;padding-top:1.25rem;border-top:1px solid var(--line)}
+h3{font-size:16px;font-weight:500;margin:1.5rem 0 .5rem}
+p{margin:0 0 1rem}
+.lede{color:var(--ink2);margin-bottom:1.5rem}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:var(--sunk);padding:.1em .35em;border-radius:4px}
+.tablewrap{overflow-x:auto;margin:0 0 1.25rem}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--ink2);white-space:nowrap}
+ul{margin:0 0 1rem;padding-left:1.15rem}
+li{margin-bottom:.4rem}
+.note{background:var(--sunk);border-radius:var(--radius);padding:.9rem 1.1rem;margin:0 0 1.25rem;font-size:14.5px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 1.25rem}
+.sw{font-size:12px;padding:3px 10px;border-radius:var(--radius)}
+
+/* phone mockups */
+.screens{display:flex;flex-wrap:wrap;gap:16px;background:var(--sunk);
+  border-radius:12px;padding:1.25rem;margin:0 0 1.5rem;justify-content:center}
+.phone{width:290px;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.phead{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.phead .date{margin:0;font-size:12px;color:var(--ink3)}
+.phead .title{margin:2px 0 0;font-size:18px;font-weight:500}
+.phead .sub{margin:2px 0 0;font-size:12px;color:var(--ink3)}
+.pbody{padding:10px 12px;display:flex;flex-direction:column;gap:8px;flex:1}
+.item{border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px}
+.item.done{opacity:.55}
+.itop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.iname{margin:0;font-size:14px;font-weight:500}
+.item.done .iname{text-decoration:line-through}
+.itime{font-size:12px;color:var(--ink3);white-space:nowrap}
+.meta{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.pill{font-size:11px;padding:2px 8px;border-radius:var(--radius)}
+.hint{font-size:11px;color:var(--ink3)}
+.comment{margin-top:8px;padding:7px 9px;background:var(--sunk);
+  border-radius:var(--radius);font-size:12px;color:var(--ink2)}
+.acts{display:flex;gap:6px;margin-top:10px;align-items:center}
+.btn{flex:1;font:inherit;font-size:12px;padding:5px 6px;background:transparent;
+  color:var(--ink);border:1px solid var(--line2);border-radius:var(--radius);cursor:default}
+.btn.icon{flex:0 0 auto;padding:5px 10px}
+.btn.icon.on{border-color:var(--accent);color:var(--accent)}
+.nav{display:flex;border-top:1px solid var(--line);padding:8px 0;margin-top:auto}
+.nav div{flex:1;text-align:center;font-size:11px;color:var(--ink3)}
+.nav div.sel{color:var(--accent)}
+.nav b{display:block;font-size:17px;font-weight:400}
+.field{border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px 12px;min-height:62px;font-size:13px;color:var(--ink3)}
+.mic{width:64px;height:64px;border-radius:50%;background:var(--accent-bg);
+  color:var(--accent);display:inline-flex;align-items:center;
+  justify-content:center;font-size:26px}
+.center{text-align:center}
+.saved{margin:6px 0 0;font-size:11px;color:var(--ok)}
+.recent{border-top:1px solid var(--line);padding-top:10px}
+.recent h4{margin:0 0 8px;font-size:12px;font-weight:500;color:var(--ink2)}
+.entry{padding:8px 10px;background:var(--sunk);border-radius:var(--radius);margin-bottom:6px}
+.entry p{margin:0;font-size:12px}
+.entry .stamp{margin-top:3px;font-size:11px;color:var(--ink3)}
+.queued{color:var(--warn)}
+.scrim{flex:1;background:var(--sunk);opacity:.5;min-height:64px}
+.sheet{border-top:1px solid var(--line2);border-radius:14px 14px 0 0;
+  background:var(--card);padding:12px 14px 16px}
+.grab{width:34px;height:4px;background:var(--line2);border-radius:2px;margin:0 auto 12px}
+.sheet .st{margin:0 0 2px;font-size:15px;font-weight:500}
+.sheet .ss{margin:0 0 12px;font-size:12px;color:var(--ink3)}
+.row{display:flex;gap:10px;align-items:center;margin-top:12px}
+.mic.sm{width:46px;height:46px;font-size:20px}
+.later{opacity:.45}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>PersonalOS Android — UI spec</h1>
+<p class="lede">Visual reference and build spec for the two-screen Android companion app. Hand this whole page to any build session so the screens come out the same way twice.</p>
+
+<div class="note">
+<strong>Status:</strong> design reference, not a finished spec. Layout and tokens here are the intended target; the first working version should simplify wherever Compose makes something awkward. Nothing in this document overrides <code>PROJECT_CONTEXT.md</code>.
+</div>
+
+<h2>The screens</h2>
+
+<div class="screens">
+
+  <div class="phone">
+    <div class="phead">
+      <p class="date">Saturday, 26 September</p>
+      <p class="title">Today</p>
+    </div>
+    <div class="pbody">
+
+      <div class="item">
+        <div class="itop">
+          <p class="iname">Morning workout</p>
+          <span class="itime">6:30 am</span>
+        </div>
+        <div class="meta">
+          <span class="pill" style="background:var(--health-bg);color:var(--health-fg)">health</span>
+          <span class="hint">&#9200; 15 min before</span>
+        </div>
+        <div class="acts">
+          <button class="btn">&#10003; Done</button>
+          <button class="btn">Postpone</button>
+          <button class="btn icon" aria-label="Add comment">&#128172;</button>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="itop">
+          <p class="iname">Review Q3 numbers</p>
+          <span class="itime">9:00 am</span>
+        </div>
+        <div class="meta">
+          <span class="pill" style="background:var(--work-bg);color:var(--work-fg)">work</span>
+          <span class="pill" style="background:var(--me-bg);color:var(--me-fg)">in progress</span>
+        </div>
+        <div class="comment">Waiting on finance for the revised figures</div>
+        <div class="acts">
+          <button class="btn">&#10003; Done</button>
+          <button class="btn">Postpone</button>
+          <button class="btn icon on" aria-label="Edit comment">&#128172;</button>
+        </div>
+      </div>
+
+      <div class="item done">
+        <div class="itop">
+          <p class="iname">Call parents</p>
+          <span class="itime">7:00 pm</span>
+        </div>
+        <div class="meta">
+          <span class="pill" style="background:var(--family-bg);color:var(--family-fg)">family</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="nav">
+      <div class="sel"><b>&#9776;</b>Today</div>
+      <div><b>&#127908;</b>Capture</div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="scrim"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <p class="st">Comment</p>
+      <p class="ss">Review Q3 numbers</p>
+      <div class="field" style="color:var(--ink2)">Waiting on finance for the revised figures</div>
+      <div class="row">
+        <div class="mic sm">&#127908;</div>
+        <span style="font-size:12px;color:var(--ink2)">Tap to speak</span>
+        <div class="later" style="margin-left:auto">
+          <button class="btn icon" aria-label="Attach file">&#128206;</button>
+        </div>
+      </div>
+      <p class="hint" style="margin:8px 0 0">Attachments come later — phase 2</p>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="phead">
+      <p class="title">Capture</p>
+      <p class="sub">What happened? Say it or type it.</p>
+    </div>
+    <div class="pbody">
+      <div class="field">Start typing, or tap the mic&hellip;</div>
+      <div class="center">
+        <div class="mic">&#127908;</div>
+        <p class="saved">&#10003; Saved automatically</p>
+      </div>
+      <div class="recent">
+        <h4>Last 24 hours</h4>
+        <div class="entry">
+          <p>Skipped the gym, worked late on the migration.</p>
+          <p class="stamp">9:42 pm &middot; voice</p>
+        </div>
+        <div class="entry">
+          <p>Good call with Priya about the roadmap.</p>
+          <p class="stamp">4:15 pm &middot; text <span class="queued">&middot; queued</span></p>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div><b>&#9776;</b>Today</div>
+      <div class="sel"><b>&#127908;</b>Capture</div>
+    </div>
+  </div>
+
+</div>
+
+<h2>Design decisions and why</h2>
+
+<h3>Two screens, one bottom bar</h3>
+<p>No drawer, no nested navigation. Everything is one tap from anywhere. This is a companion app used while walking around, not a dashboard — depth is the enemy.</p>
+
+<h3>Actions live on the card</h3>
+<p>Done and Postpone are visible buttons, not swipe gestures. Swipes look elegant and are undiscoverable; buttons are honest and simpler to build.</p>
+
+<h3>Comment is an icon, not a field</h3>
+<p>The card stays clean. Tapping the icon opens a bottom sheet with the same voice-or-type affordance as Capture, so there is one input pattern in the app rather than two. When a comment exists, the icon takes the accent color and the comment text shows inline on the card — so you can see which items have notes without opening anything.</p>
+
+<h3>Capture has no Save button</h3>
+<p>Entries save automatically. The tradeoff is that there is no discard — every started entry is stored, including stray half-thoughts. That is the correct trade for zero-friction capture, but the auto-save trigger must be defined explicitly before building (see open questions).</p>
+
+<h3>Recent entries are feedback, not a feature</h3>
+<p>With no Save button, the last-24-hours list is how you know the thing actually saved. It also surfaces the offline queue state honestly rather than failing silently.</p>
+
+<h3>No category picker at capture time</h3>
+<p>Deliberate, carried over from the original plan. Categorization happens later in the analysis phase, not at entry time.</p>
+
+<h2>Design tokens</h2>
+
+<h3>Domain colors</h3>
+<p>One per life domain, used on the small pill on each item card.</p>
+<div class="swatches">
+  <span class="sw" style="background:var(--work-bg);color:var(--work-fg)">work</span>
+  <span class="sw" style="background:var(--health-bg);color:var(--health-fg)">health</span>
+  <span class="sw" style="background:var(--family-bg);color:var(--family-fg)">family</span>
+  <span class="sw" style="background:var(--wealth-bg);color:var(--wealth-fg)">wealth</span>
+  <span class="sw" style="background:var(--me-bg);color:var(--me-fg)">me</span>
+</div>
+
+<div class="tablewrap">
+<table>
+<tr><th>Domain</th><th>Background (light)</th><th>Text (light)</th><th>Background (dark)</th><th>Text (dark)</th></tr>
+<tr><td>work</td><td><code>#E6F1FB</code></td><td><code>#0C447C</code></td><td><code>#0C447C</code></td><td><code>#B5D4F4</code></td></tr>
+<tr><td>health</td><td><code>#E1F5EE</code></td><td><code>#0F6E56</code></td><td><code>#085041</code></td><td><code>#9FE1CB</code></td></tr>
+<tr><td>family</td><td><code>#FBEAF0</code></td><td><code>#72243E</code></td><td><code>#72243E</code></td><td><code>#F4C0D1</code></td></tr>
+<tr><td>wealth</td><td><code>#FAEEDA</code></td><td><code>#633806</code></td><td><code>#633806</code></td><td><code>#FAC775</code></td></tr>
+<tr><td>me</td><td><code>#EEEDFE</code></td><td><code>#3C3489</code></td><td><code>#3C3489</code></td><td><code>#CECBF6</code></td></tr>
+</table>
+</div>
+
+<h3>Status pills</h3>
+<p>Status reuses the same pill shape. <code>pending</code> shows no pill (absence is the default state). <code>in_progress</code> uses the <code>me</code> purple. <code>postponed</code> uses the <code>wealth</code> amber. <code>done</code> shows no pill — the row dims to 55% opacity and the title gets a strikethrough instead.</p>
+
+<h3>Type scale</h3>
+<div class="tablewrap">
+<table>
+<tr><th>Element</th><th>Size</th><th>Weight</th></tr>
+<tr><td>Screen title (Today, Capture)</td><td>18sp</td><td>500</td></tr>
+<tr><td>Item title</td><td>14sp</td><td>500</td></tr>
+<tr><td>Body / comment text</td><td>13sp</td><td>400</td></tr>
+<tr><td>Time, pills, metadata</td><td>11–12sp</td><td>400</td></tr>
+<tr><td>Bottom nav labels</td><td>11sp</td><td>400</td></tr>
+</table>
+</div>
+<p>Two weights only — 400 and 500. Nothing heavier. Sentence case everywhere, never title case.</p>
+
+<h3>Spacing and shape</h3>
+<ul>
+<li>Corner radius: <code>8dp</code> on cards, buttons, pills and fields; <code>14dp</code> on the bottom sheet top corners</li>
+<li>Card padding: <code>10dp</code> vertical, <code>12dp</code> horizontal</li>
+<li>Gap between item cards: <code>8dp</code></li>
+<li>Screen edge padding: <code>12dp</code></li>
+<li>Borders: <code>1dp</code>, low-contrast hairline — never heavy dividers</li>
+<li>Mic button: <code>64dp</code> circle on Capture, <code>46dp</code> in the comment sheet</li>
+</ul>
+
+<h3>Dark mode</h3>
+<p>Mandatory, not optional. Every color above has a dark counterpart. Never hardcode a hex in a composable — read from the theme so both modes work from one definition.</p>
+
+<h2>Compose mapping</h2>
+<p>How each visual element maps to a real Jetpack Compose component, so the build has no guesswork.</p>
+
+<div class="tablewrap">
+<table>
+<tr><th>Visual element</th><th>Compose / Material 3</th></tr>
+<tr><td>Bottom bar with two tabs</td><td><code>NavigationBar</code> + <code>NavigationBarItem</code></td></tr>
+<tr><td>Screen scaffold (header, body, bottom bar)</td><td><code>Scaffold</code></td></tr>
+<tr><td>Scrolling list of items</td><td><code>LazyColumn</code></td></tr>
+<tr><td>One item card</td><td><code>Card</code> or <code>Surface</code> with border</td></tr>
+<tr><td>Domain / status pill</td><td><code>AssistChip</code>, or a <code>Surface</code> with rounded shape</td></tr>
+<tr><td>Done / Postpone buttons</td><td><code>OutlinedButton</code></td></tr>
+<tr><td>Comment icon button</td><td><code>IconButton</code></td></tr>
+<tr><td>Comment panel sliding from bottom</td><td><code>ModalBottomSheet</code></td></tr>
+<tr><td>Text entry (capture, comment)</td><td><code>OutlinedTextField</code></td></tr>
+<tr><td>Mic button</td><td><code>FilledIconButton</code> or circular <code>Surface</code></td></tr>
+<tr><td>Colors and type</td><td><code>MaterialTheme.colorScheme</code> / <code>.typography</code></td></tr>
+</table>
+</div>
+
+<h2>Backend fields used</h2>
+<p>Every field on these screens already exists in the backend — no schema work is needed for the Today tab.</p>
+
+<div class="tablewrap">
+<table>
+<tr><th>UI element</th><th>Backend field</th><th>Exists?</th></tr>
+<tr><td>Item title</td><td><code>title</code></td><td>yes</td></tr>
+<tr><td>Time on the right</td><td><code>scheduled_time</code></td><td>yes</td></tr>
+<tr><td>Domain pill</td><td><code>domain</code></td><td>yes</td></tr>
+<tr><td>Status pill / dimming</td><td><code>status</code></td><td>yes</td></tr>
+<tr><td>Comment text and icon state</td><td><code>comments</code></td><td>yes</td></tr>
+<tr><td>"15 min before" hint</td><td><code>alarm_lead_minutes</code></td><td>yes</td></tr>
+<tr><td>Capture entry text</td><td><code>capture_entries.raw_text</code></td><td><strong>not built yet</strong></td></tr>
+<tr><td>voice / text label on entries</td><td><code>capture_entries.source</code></td><td><strong>not built yet</strong></td></tr>
+<tr><td>"queued" indicator</td><td>local Room status, not the server</td><td>local only</td></tr>
+</table>
+</div>
+
+<h2>Open questions before building</h2>
+<ul>
+<li><strong>Auto-save trigger.</strong> With no Save button, when exactly does a capture entry persist? On speech end, on leaving the screen, on a typing debounce, or a combination. Undefined behaviour here means lost or duplicated entries. Logged as backlog item 14.</li>
+<li><strong>Attachments.</strong> Screenshots, PDFs and spreadsheets in both capture and comments. This needs VM file storage, an upload endpoint, and binary handling in the offline queue — the same cost in both places, so defer both or neither. Logged as backlog item 13.</li>
+<li><strong>Postpone semantics.</strong> Does postpone move the item to a later time today, to tomorrow, or just flag it? The backend has the status value but not the rule.</li>
+<li><strong>Which list feeds Today.</strong> <code>routine_items</code>, <code>planning_items</code>, or both merged into one list.</li>
+</ul>
+
+</div>
+</body>
+</html>

@@ -28,6 +28,12 @@
 - Tab 2: general commands (migrations, psql, git, etc.)
 - Tab 3: `npm run dev` (frontend — leave running)
 
+**Azure portal details:**
+- account - karri2027 for microsoft
+- purchased VM
+- purchased on 22 Sep 2026
+
+
 ---
 
 ## 2. Backend Folder Structure
