@@ -44,14 +44,6 @@ The Postgres password for `personal_os_app` was pasted in plaintext into a Claud
 - Restart FastAPI (local and VM) after updating `.env` so it picks up the new value
 
 
-### 8. Swap open port 8000 for HTTPS via Caddy before going beyond testing
-**Added:** 2026-09-24
-Azure NSG rule `Allow-Port-8000-Temp` currently exposes FastAPI on plain HTTP (port 8000) to the entire internet, for Android development/testing convenience. Before this goes further than testing:
-- Set up Caddy on the VM for automatic HTTPS (likely needs a free subdomain via DuckDNS or similar, since Caddy's auto-HTTPS needs a real domain name, not a bare IP)
-- Point FastAPI behind Caddy on port 443
-- Remove/disable the `Allow-Port-8000-Temp` NSG rule once HTTPS is confirmed working
-- Update Android app's base URL from `http://4.224.33.25:8000` to the HTTPS domain
-
 ### 9. Rotate DATABASE_URL password (exposed a second time, now on the Azure VM too)
 **Added:** 2026-09-24
 Same password rotation item as before (#5) — the plaintext password was also used to set up the VM's Postgres user (`personal_os_app`) during Azure setup. When rotating:
@@ -76,6 +68,13 @@ As the Android app project grows, it needs the same documentation discipline as 
 - `personalos-android-backlog.md` — Android-specific tech debt and pending features
 - `ROADMAP.md` (at repo root) — unified feature roadmap across web + Android, with phases and priorities
 **Status:** Open — start documenting during next Android session, as the project structure stabilizes.
+
+
+
+### 14. Verify all required secrets exist on Azure VM after any deployment
+**Added:** 2026-09-28
+JWT_SECRET was missing entirely from the Azure VM's .env file, causing every login to fail with a 500 error (not the expected 401). Likely missed during initial migration from local to Azure. Worth a quick checklist next time secrets move between environments: compare .env keys on VM against local .env to catch silent gaps like this.
+**Status:** Resolved — JWT_SECRET added and confirmed working. Logged for the pattern, not the specific bug.
 
 ---
 
