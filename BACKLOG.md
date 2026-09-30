@@ -61,12 +61,22 @@ Now that BACKLOG.md only tracks pending items (not resolved history), we may los
 Section 5 and Section 6 of PROJECT_CONTEXT.md still describe Oracle Cloud as the hosting plan. Actual hosting is the Azure VM (`personalos-vm`, `4.224.33.25`), deployed and confirmed working. Needs a find-and-replace pass.
 **Status:** Open.
 
+
+
 ### 15. Migrate planning_items status enum + add domain column properly
 **Added:** 2026-09-30
 Web Planning UI shows "planned/in-progress/completed" but the backend `PlanningStatus` enum is `open/promoted/archived` — words don't semantically match ("promoted" ≠ "in progress"). Also `planning_items` has no `domain` column at all (unlike `routine_items`), so the UI's domain tags on plan cards are currently frontend-only and don't persist. Fix both in one migration: rename the enum values to match actual meaning, and add a nullable `domain` column. Needed before the Planning UI can be genuinely backend-synced (blocks item #3).
 **Status:** Open.
 
-
+### 16. Rotate web login password (exposed in plaintext in chat, 2026-09-30)
+**Added:** 2026-09-30
+The actual PersonalOS login email and password were pasted in plaintext into a Claude chat while running a curl command to create a test routine item — on the corporate account being retired tomorrow (2026-09-30/10-01). This is the same pattern as items #7/#9 (DB password), now the login password too.
+**To do:**
+- Pick a new password
+- Update the user's password in Postgres directly (`users` table, bcrypt-hashed — don't just edit `.env`) on both local and Azure VM databases if they're separate, or just the one if shared
+- Update `local.properties` on the Mac (Android app's stored credentials) to match
+- Confirm Android app still logs in after clearing app storage (same check as the BuildConfig verification)
+**Status:** Open — do this before or shortly after switching Claude accounts.
 
 ---
 

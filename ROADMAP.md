@@ -6,18 +6,37 @@
 
 ---
 
+## Phase 0.5 — Safety first (done)
+
+### 0. Put the Android project under version control
+Moved into the `personal_os` repo at `android/`. Credentials moved out of `AuthRepository.kt` into untracked `local.properties`, read via `BuildConfig`.
+**Status:** Done (2026-09-30, commit `7fabb75`). Verified by clearing app storage and confirming a fresh login still worked.
+
 ## Phase 1 — Daily-usable Android (highest priority)
 
 ### 1. Today screen — routine/planning items list
-Build the Today tab per `personalos-android-ui-spec.html`: item cards, domain pill, status pill, time, alarm-lead hint. Read-only first (data already flows — confirmed working 2026-09-28).
-**Estimate:** ~1 session (2-3 hrs)
-**Status:** Not started.
+Item cards with domain pill, status pill (in_progress = purple, postponed = amber, pending/done = no pill), time, and comment box, per `personalos-android-ui-spec.html`.
+**Status:** Done. Data-wired 2026-09-29; visual styling (pills, dimming/strikethrough for done) added and visually verified against real data 2026-09-30.
 
 ### 2. Done / Postpone — real backend actions
-Wire the two buttons on each item card to actual `PATCH` calls against `/routines` (and `/planning` once relevant), updating status on the server, not just locally.
-**Estimate:** ~1 session (1.5-2 hrs)
+Both buttons call real `PATCH` requests against `/routines`, updating status on the server and refreshing the list.
+**Status:** Done (2026-09-29). Verified against the live database.
+**Milestone reached:** the app is genuinely usable day-to-day for routine tracking.
+
+### 2a. Install on physical phone (APK)
+Build a debug APK and sideload it onto the real phone. No app store.
+**Estimate:** ~20 min
+**Status:** In progress (2026-09-30).
+
+### 2b. Snooze-style postpone
+Postpone asks "for how long?" (e.g. 15 min / 1 hr / tomorrow) and actually moves the item's scheduled time, instead of only flipping a status label. Needs: backend endpoint accepting a duration and computing the new time; Android picker; web picker; a decision on whether status returns to `pending` or stays `postponed`.
+**Estimate:** ~half a day across 2 sessions.
 **Status:** Not started.
-**Milestone:** once this lands, the app is genuinely usable day-to-day for routine tracking.
+
+### 2c. Host the web app on the VM
+Production build (`npm run build`) served by Caddy on the existing DuckDNS domain, so it's reachable from any device. No purchase needed.
+**Estimate:** 30-45 min
+**Status:** Not started.
 
 ---
 
