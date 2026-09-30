@@ -61,15 +61,6 @@ Now that BACKLOG.md only tracks pending items (not resolved history), we may los
 Section 5 and Section 6 of PROJECT_CONTEXT.md still describe Oracle Cloud as the hosting plan. Actual hosting is the Azure VM (`personalos-vm`, `4.224.33.25`), deployed and confirmed working. Needs a find-and-replace pass.
 **Status:** Open.
 
-### 12. Create Android-specific docs (PROJECT_CONTEXT, BACKLOG, update main ROADMAP)
-**Added:** 2026-09-26
-As the Android app project grows, it needs the same documentation discipline as the backend. Need:
-- `personalos-android-project-context.md` — live state of the Android codebase (structure, build config, Kotlin/Compose patterns)
-- `personalos-android-backlog.md` — Android-specific tech debt and pending features
-- `ROADMAP.md` (at repo root) — unified feature roadmap across web + Android, with phases and priorities
-**Status:** Open — start documenting during next Android session, as the project structure stabilizes.
-
-
 ### 15. Migrate planning_items status enum + add domain column properly
 **Added:** 2026-09-30
 Web Planning UI shows "planned/in-progress/completed" but the backend `PlanningStatus` enum is `open/promoted/archived` — words don't semantically match ("promoted" ≠ "in progress"). Also `planning_items` has no `domain` column at all (unlike `routine_items`), so the UI's domain tags on plan cards are currently frontend-only and don't persist. Fix both in one migration: rename the enum values to match actual meaning, and add a nullable `domain` column. Needed before the Planning UI can be genuinely backend-synced (blocks item #3).
