@@ -2,7 +2,7 @@
 
 > **Purpose:** Technical source of truth for the Android companion app. Read this before changing any Android code; update it after. Mirrors the role of `PROJECT_CONTEXT.md` (backend + web). If the two ever disagree about the backend, `PROJECT_CONTEXT.md` wins.
 >
-> **Last updated:** 2026-09-29
+> **Last updated:** 2026-09-30
 
 ---
 
@@ -22,7 +22,7 @@ Single user (the owner). Distributed as a sideloaded APK only — never publishe
 | Item | Value |
 |---|---|
 | IDE | Android Studio Quail 4 (2026.1.4 Patch 1), Apple Silicon |
-| Project location | `~/AndroidStudioProjects/PersonalOS` (**not yet in git — see §8**) |
+| Project location | `~/Projects/personal_os/android` (in git as of 2026-09-30, commit `7fabb75`) |
 | Package | `com.example.personalos` |
 | Min SDK | 24 (Android 7.0) |
 | Compile / target SDK | 37 |
@@ -107,8 +107,7 @@ Verified end-to-end on 2026-09-29 against the live database.
 
 ## 8. Known gaps and tech debt
 
-1. **Not version-controlled.** Project lives outside the `personal_os` repo. Highest priority.
-2. **Credentials hardcoded in `AuthRepository.kt`.** Must move to an untracked file (e.g. `local.properties` read via `BuildConfig`) before the project enters git.
+
 3. **No 401 handling.** Expired token is never cleared or refreshed.
 4. **Errors are invisible.** Failures only reach Logcat (`tag:PersonalOS`); nothing shows on screen.
 5. **Debug logging left in** `RoutineItemCard.updateStatus()` — prints the token. Remove before real use.
@@ -116,6 +115,8 @@ Verified end-to-end on 2026-09-29 against the live database.
 7. **Postpone only flips a label.** It does not move the item's time. Snooze-style postpone is on the roadmap.
 8. **Web app has no visual state for `postponed`.** Postponed items look identical to pending ones on the web dashboard. This is why a web check appeared to show "nothing changed" on 2026-09-29 when the database was in fact correct.
 9. **Visuals are placeholder.** Plain text; domain/status pills and colors from the UI spec not yet applied.
+
+**Resolved (2026-09-30, commit 7fabb75):** project moved into the personal_os repo at android/; credentials moved out of AuthRepository.kt into untracked local.properties, read via BuildConfig.
 
 ---
 

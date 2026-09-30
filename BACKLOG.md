@@ -71,10 +71,7 @@ As the Android app project grows, it needs the same documentation discipline as 
 
 
 
-### 14. Verify all required secrets exist on Azure VM after any deployment
-**Added:** 2026-09-28
-JWT_SECRET was missing entirely from the Azure VM's .env file, causing every login to fail with a 500 error (not the expected 401). Likely missed during initial migration from local to Azure. Worth a quick checklist next time secrets move between environments: compare .env keys on VM against local .env to catch silent gaps like this.
-**Status:** Resolved — JWT_SECRET added and confirmed working. Logged for the pattern, not the specific bug.
+
 
 ---
 
