@@ -70,6 +70,10 @@ As the Android app project grows, it needs the same documentation discipline as 
 **Status:** Open — start documenting during next Android session, as the project structure stabilizes.
 
 
+### 15. Migrate planning_items status enum + add domain column properly
+**Added:** 2026-09-30
+Web Planning UI shows "planned/in-progress/completed" but the backend `PlanningStatus` enum is `open/promoted/archived` — words don't semantically match ("promoted" ≠ "in progress"). Also `planning_items` has no `domain` column at all (unlike `routine_items`), so the UI's domain tags on plan cards are currently frontend-only and don't persist. Fix both in one migration: rename the enum values to match actual meaning, and add a nullable `domain` column. Needed before the Planning UI can be genuinely backend-synced (blocks item #3).
+**Status:** Open.
 
 
 
